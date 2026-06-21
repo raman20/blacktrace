@@ -107,7 +107,7 @@ export default function App() {
     async function fetchManifest() {
       try {
         setLoadingStatus("Fetching manifest database...");
-        const response = await fetch('/data/manifest.json');
+        const response = await fetch(`${import.meta.env.BASE_URL}data/manifest.json`);
         if (!response.ok) throw new Error("Failed to load manifest.json");
         const data = await response.json();
         setManifest(data);

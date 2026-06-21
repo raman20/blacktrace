@@ -7,7 +7,7 @@ let currentMatchData = null;
 // Fetches and parses the read-optimized JSON match file
 export async function loadMatchData(filePath) {
   // Build absolute URL for the static public folder
-  const fileUrl = `${window.location.origin}/${filePath}`;
+  const fileUrl = `${import.meta.env.BASE_URL}${filePath}`;
   console.log(`Fetching read-optimized match data: ${fileUrl}`);
   
   try {
@@ -90,7 +90,7 @@ export async function loadMacroMatchData(matches) {
 
   // Fetch all matches in parallel
   const fetchPromises = matches.map(match => {
-    const fileUrl = `${window.location.origin}/${match.file_path}`;
+    const fileUrl = `${import.meta.env.BASE_URL}${match.file_path}`;
     return fetch(fileUrl).then(res => res.ok ? res.json() : null).catch(() => null);
   });
 
