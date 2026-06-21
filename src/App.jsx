@@ -15,9 +15,9 @@ import './App.css';
 
 // Map metadata configuration
 const MAP_CONFIGS = {
-  AmbroseValley: { scale: 900, originX: -370, originZ: -473, image: '/minimaps/AmbroseValley.png' },
-  GrandRift: { scale: 581, originX: -290, originZ: -290, image: '/minimaps/GrandRift.png' },
-  Lockdown: { scale: 1000, originX: -500, originZ: -500, image: '/minimaps/Lockdown.jpg' }
+  AmbroseValley: { scale: 900, originX: -370, originZ: -473, image: `${import.meta.env.BASE_URL}minimaps/AmbroseValley.png` },
+  GrandRift: { scale: 581, originX: -290, originZ: -290, image: `${import.meta.env.BASE_URL}minimaps/GrandRift.png` },
+  Lockdown: { scale: 1000, originX: -500, originZ: -500, image: `${import.meta.env.BASE_URL}minimaps/Lockdown.jpg` }
 };
 
 // Helper: Convert world coordinates (x, z) to pixel coordinates (0-1024)
