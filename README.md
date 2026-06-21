@@ -33,35 +33,35 @@ This project requires zero backend databases or servers. All telemetry is pre-pr
 ### UI Layout Wireframe
 ```text
 +-----------------+------------------------------------------+-----------------+
-|   Environment   |                                          |   Lobby Stats   |
+|   Maps          |                                          |   Lobby Stats   |
 |   Dropdown      |                                          |                 |
 +-----------------+             Map Viewport                 |  Humans | Bots  |
 |                 |          (HTML5 Canvas UI)               |   100   |  50   |
 |                 |                                          +-----------------+
-|  Matches by     |                                          |                 |
-|  Date (Tree)    |       [Player Paths]                     |                 |
-|   [ ] Date 1    |          [Deaths]                        |  Match Event    |
-|    [ ] Match A  |                                          |  Log (Feed)     |
-|    [ ] Match B  |                                          |                 |
-|                 |                                          |  PlayerX killed |
+|  Matches        |                                          |                 |
+|   > Date 1      |       [Player Paths]                     |  Match Event    |
+|    [ ] Match A  |          [Deaths]                        |  Log (Feed)     |
+|       [> Play]  |                                          |                 |
+|    [ ] Match B  |                                          |  PlayerX killed |
 |                 |                                          |  PlayerY        |
 +-----------------+                                          |                 |
-|  Map Markers    |                                          |  BotZ died to   |
+|  Markers        |                                          |  BotZ died to   |
 |  [x] Paths      |                                          |  Storm          |
 |  [x] Humans     |                                          |                 |
 |  [x] Bots       +------------------------------------------+                 |
 |  [x] Deaths     | Playback Slider: 0:00 [========] 25:00   |                 |
-|  [x] Kills      | [Play] [Reset] | Heatmaps: [None/Traffic]|                 |
+|  [x] Kills      | [Play] [X Close] | Heatmaps: [Traffic]   |                 |
 +-----------------+------------------------------------------+-----------------+
 ```
 
-### The Tree View Sidebar (Left)
-- **Map Selection:** Use the dropdown at the very top left to switch between `AmbroseValley`, `GrandRift`, and `Lockdown`.
-- **Single Match Mode:** Click the text of any match in the tree view to instantly load its timeline. You can press the **Play** button to watch the match unfold!
-- **Macro View Mode:** Click the **Checkboxes** next to dates or specific matches to select multiple matches at once. This disables the timeline and activates the Macro Heatmap capabilities.
+### The Collapsible Sidebar (Left)
+- **Maps:** Use the dropdown at the very top left to switch between `AmbroseValley`, `GrandRift`, and `Lockdown`.
+- **Single Match Timeline:** Click the glowing **Play** button on any match card to instantly preview its timeline. Press the **X** button to close it.
+- **Macro View Aggregation:** Click the **Checkboxes** next to dates or specific matches to select multiple matches at once. This activates the Macro Heatmap capabilities.
 
 ### Map Markers & HUD (Right)
-- **Heatmaps:** When in Macro View (multiple matches selected), use the Heatmap dropdown to overlay aggregated Traffic or Combat (Kills/Deaths) densities.
+- **Shareable Links:** Click the **Share** button on the Canvas HUD to instantly capture your exact state (Map, Checkboxes, Heatmap mode, Timestep) and copy a shareable deep-link to your clipboard.
+- **Independent Heatmap Scoping:** Heatmaps dynamically adhere to your selection scope. If you check multiple matches, the heatmap aggregates across *all* of them—even if you dive into a single match's playback timeline.
 - **Marker Toggles:** Use the checkboxes to overlay static geometric markers (Loot, Deaths, Kills) directly onto the map or on top of heatmaps.
 - **Hover Insights:** Hover your mouse over any active player or marker on the map to see their exact X/Z coordinates, elevation, and User ID.
 

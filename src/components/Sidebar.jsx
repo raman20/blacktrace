@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  Map as MapIcon, Users, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen, Eye
+  Map as MapIcon, Users, ChevronRight, ChevronDown, PanelLeftClose, PanelLeftOpen, Eye, Play, X, MapPin
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -8,16 +8,22 @@ export default function Sidebar({
   selectedMap, setSelectedMap, maps,
   filteredMatches, checkedMatches, collapsedDates,
   toggleDateCollapse, toggleDateSelection,
-  handleMatchCardClick, toggleMatchSelection, selectedMatch, formatTime,
+  handleMatchCardClick, toggleMatchSelection, handleMatchChange, clearTimelinePreview, selectedMatch, formatTime,
   showPaths, setShowPaths, showHumans, setShowHumans, showBots, setShowBots,
   showDeaths, setShowDeaths, showKills, setShowKills, showStorm, setShowStorm, showLoot, setShowLoot
 }) {
+  const [mapsCollapsed, setMapsCollapsed] = useState(false);
+  const [matchesCollapsed, setMatchesCollapsed] = useState(false);
+  const [markersCollapsed, setMarkersCollapsed] = useState(false);
+
   return (
     <aside className={`sidebar ${leftSidebarOpen ? '' : 'collapsed'}`}>
       <div className="sidebar-expanded-content">
         <div className="sidebar-header">
           <div className="sidebar-title-row">
-            <h1>Black <span>Trace</span></h1>
+            <a href={import.meta.env.BASE_URL} style={{ textDecoration: 'none' }}>
+              <h1>Black <span>Trace</span></h1>
+            </a>
             <button 
               className="sidebar-toggle-btn" 
               onClick={() => setLeftSidebarOpen(false)}
@@ -28,21 +34,42 @@ export default function Sidebar({
           </div>
         </div>
         
-        <div className="sidebar-content">
-          {/* Filters card */}
-          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            <div className="form-group">
-              <label><MapIcon size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }}/> Map Selection</label>
-              <select className="form-select" value={selectedMap} onChange={e => setSelectedMap(e.target.value)}>
-                {maps.map(m => <option key={m} value={m}>{m}</option>)}
-              </select>
+        <div className="sidebar-content" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {/* Maps card */}
+          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div 
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: mapsCollapsed ? '0' : '14px' }}
+              onClick={() => setMapsCollapsed(!mapsCollapsed)}
+            >
+              <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.8px', display: 'flex', alignItems: 'center' }}>
+                <MapIcon size={14} style={{ marginRight: '6px', color: 'var(--accent-cyan)' }}/> Maps
+              </h3>
+              {mapsCollapsed ? <ChevronRight size={14} color="var(--text-muted)" /> : <ChevronDown size={14} color="var(--text-muted)" />}
             </div>
+            
+            {!mapsCollapsed && (
+              <div className="form-group" style={{ margin: 0 }}>
+                <select className="form-select" value={selectedMap} onChange={e => setSelectedMap(e.target.value)}>
+                  {maps.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+            )}
           </div>
           
-          {/* Matches selection list */}
-          <div className="form-group">
-            <label><Users size={12} style={{ verticalAlign: 'middle', marginRight: '4px' }}/> Matches by Date ({filteredMatches.length} total)</label>
-              <div className="match-list-container" style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+          {/* Matches card */}
+          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div 
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: matchesCollapsed ? '0' : '14px' }}
+              onClick={() => setMatchesCollapsed(!matchesCollapsed)}
+            >
+              <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.8px', display: 'flex', alignItems: 'center' }}>
+                <Users size={14} style={{ marginRight: '6px', color: 'var(--accent-pink)' }}/> Matches ({filteredMatches.length})
+              </h3>
+              {matchesCollapsed ? <ChevronRight size={14} color="var(--text-muted)" /> : <ChevronDown size={14} color="var(--text-muted)" />}
+            </div>
+            
+            {!matchesCollapsed && (
+              <div className="match-list-container" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {(() => {
                   // Group matches by date
                   const matchesByDate = filteredMatches.reduce((acc, match) => {
@@ -80,7 +107,7 @@ export default function Sidebar({
                         </div>
                         
                         {!isCollapsed && (
-                          <div className="date-group-matches" style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingLeft: '14px', borderLeft: '2px solid rgba(255,255,255,0.05)', marginLeft: '10px' }}>
+                          <div className="date-group-matches" style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
                             {dateMatches.map(match => {
                               const isChecked = checkedMatches.some(m => m.match_id === match.match_id && m.date === match.date);
                               const isPreviewing = selectedMatch?.match_id === match.match_id && selectedMatch?.date === match.date;
@@ -89,7 +116,7 @@ export default function Sidebar({
                                 key={match.match_id} 
                                 className={`match-card glass-panel ${isChecked || isPreviewing ? 'active' : ''}`}
                                 onClick={() => handleMatchCardClick(match)}
-                                style={{ padding: '12px', gap: '8px', borderRadius: '8px', minHeight: 'unset' }}
+                                style={{ padding: '16px', gap: '12px', borderRadius: '10px', minHeight: 'unset', display: 'flex', flexDirection: 'column' }}
                               >
                                 <div className="match-card-meta" style={{ display: 'flex', alignItems: 'center' }}>
                                   <input 
@@ -104,9 +131,60 @@ export default function Sidebar({
                                     {formatTime(match.duration_ms)}
                                   </span>
                                 </div>
-                                <div className="match-card-stats" style={{ fontSize: '12px', gap: '12px' }}>
+                                <div className="match-card-stats" style={{ fontSize: '12px', gap: '12px', display: 'flex', alignItems: 'center' }}>
                                   <span>👥 {match.human_count}H / {match.bot_count}B</span>
                                   <span>⚔️ {match.total_kills} Kills</span>
+                                  {selectedMatch?.match_id === match.match_id && !selectedMatch?.is_macro ? (
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        clearTimelinePreview();
+                                      }}
+                                      className="play-timeline-btn"
+                                      style={{ 
+                                        marginLeft: 'auto', 
+                                        background: 'rgba(255, 51, 102, 0.2)', 
+                                        border: '1px solid var(--accent-red)', 
+                                        color: '#ff4d6d', 
+                                        cursor: 'pointer', 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        boxShadow: '0 2px 8px rgba(255, 51, 102, 0.2)'
+                                      }}
+                                      title="Close Match Timeline"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  ) : (
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMatchChange(match);
+                                      }}
+                                      className="play-timeline-btn"
+                                      style={{ 
+                                        marginLeft: 'auto', 
+                                        background: 'var(--gradient-cyan)', 
+                                        border: 'none', 
+                                        color: '#000', 
+                                        cursor: 'pointer', 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        boxShadow: '0 2px 8px rgba(0, 242, 254, 0.4)'
+                                      }}
+                                      title="Preview Match Timeline"
+                                    >
+                                      <Play size={12} fill="#000" />
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                               );
@@ -119,12 +197,23 @@ export default function Sidebar({
                 })()}
                 {filteredMatches.length === 0 && <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px' }}>No matches found.</div>}
               </div>
-            </div>
+            )}
+          </div>
           
-          {/* Visual Layer Toggles */}
-          <div className="glass-panel" style={{ padding: '16px' }}>
-            <h3 style={{ fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '10px', letterSpacing: '0.8px' }}>Map Markers</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {/* Markers card */}
+          <div className="glass-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column' }}>
+            <div 
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: markersCollapsed ? '0' : '14px' }}
+              onClick={() => setMarkersCollapsed(!markersCollapsed)}
+            >
+              <h3 style={{ margin: 0, fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.8px', display: 'flex', alignItems: 'center' }}>
+                <MapPin size={14} style={{ marginRight: '6px', color: 'var(--accent-cyan)' }}/> Markers
+              </h3>
+              {markersCollapsed ? <ChevronRight size={14} color="var(--text-muted)" /> : <ChevronDown size={14} color="var(--text-muted)" />}
+            </div>
+            
+            {!markersCollapsed && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div className="toggle-item">
                 <span className="toggle-label"><Eye size={14} style={{ color: 'var(--accent-cyan)' }}/> Show Paths</span>
                 <label className="toggle-switch">
@@ -181,6 +270,7 @@ export default function Sidebar({
                 </label>
               </div>
             </div>
+            )}
           </div>
         </div>
       </div>

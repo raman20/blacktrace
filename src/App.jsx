@@ -102,6 +102,9 @@ export default function App() {
   const containerRef = useRef(null);
   const killFeedRef = useRef(null);
   
+  const [initialUrlParsed, setInitialUrlParsed] = useState(false);
+  const isFirstMapLoad = useRef(true);
+  
   // Load manifest.json index on mount
   useEffect(() => {
     async function fetchManifest() {
@@ -118,8 +121,15 @@ export default function App() {
         setMaps(uniqueMaps);
         setDates(uniqueDates);
         
-        // Set default filter states
-        if (uniqueMaps.length > 0) setSelectedMap(uniqueMaps[0]);
+        // URL Hydration Initial Load
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlMap = urlParams.get('map');
+        
+        if (urlMap && uniqueMaps.includes(urlMap)) {
+          setSelectedMap(urlMap);
+        } else if (uniqueMaps.length > 0) {
+          setSelectedMap(uniqueMaps[0]);
+        }
         
         setLoadingStatus("");
       } catch (err) {
@@ -130,21 +140,103 @@ export default function App() {
     fetchManifest();
   }, []);
   
+  // URL Syncing & Hydration (Runs after manifest and map are loaded)
+  useEffect(() => {
+    if (manifest.length > 0 && selectedMap && !initialUrlParsed) {
+      const urlParams = new URLSearchParams(window.location.search);
+      
+      const layers = urlParams.get('layers');
+      if (layers) {
+        setShowPaths(layers.includes('paths'));
+        setShowHumans(layers.includes('humans'));
+        setShowBots(layers.includes('bots'));
+        setShowKills(layers.includes('kills'));
+        setShowDeaths(layers.includes('deaths'));
+        setShowLoot(layers.includes('loot'));
+        setShowStorm(layers.includes('storm'));
+      }
+      
+      const hm = urlParams.get('hm');
+      if (hm) setHeatmapType(hm);
+      
+      const t = urlParams.get('t');
+      const startTime = t ? Number(t) : 0;
+      
+      const matchesStr = urlParams.get('match');
+      if (matchesStr) {
+        const matchIds = matchesStr.split(',');
+        if (matchIds.length === 1) {
+          const matchObj = manifest.find(m => m.match_id === matchIds[0]);
+          if (matchObj) {
+            handleMatchChange(matchObj, startTime, hm || 'none');
+          }
+        } else {
+          const matches = manifest.filter(m => matchIds.includes(m.match_id));
+          if (matches.length > 0) {
+            setCheckedMatches(matches);
+            handleMacroView(matches, startTime, hm || 'none');
+          }
+        }
+      } else if (startTime > 0) {
+        setCurrentTime(startTime);
+      }
+      
+      setInitialUrlParsed(true);
+    }
+  }, [manifest, selectedMap, initialUrlParsed]);
+
+  // generateShareUrl function replaces active tracking
+  function generateShareUrl() {
+    const params = new URLSearchParams();
+    if (selectedMap) params.set('map', selectedMap);
+    
+    if (selectedMatch) {
+      if (selectedMatch.is_macro && checkedMatches.length > 0) {
+        params.set('match', checkedMatches.map(m => m.match_id).join(','));
+      } else if (!selectedMatch.is_macro) {
+        params.set('match', selectedMatch.match_id);
+      }
+    }
+    
+    params.set('t', Math.floor(currentTime).toString());
+    params.set('hm', heatmapType);
+    
+    const layers = [];
+    if (showPaths) layers.push('paths');
+    if (showHumans) layers.push('humans');
+    if (showBots) layers.push('bots');
+    if (showKills) layers.push('kills');
+    if (showDeaths) layers.push('deaths');
+    if (showLoot) layers.push('loot');
+    if (showStorm) layers.push('storm');
+    params.set('layers', layers.join(','));
+    
+    const newUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+    
+    navigator.clipboard.writeText(newUrl).then(() => {
+      alert("Shareable link updated and copied to clipboard!");
+    }).catch(() => {
+      alert("Shareable link updated in URL bar!");
+    });
+  }
+  
   // Filter matches when map changes
   useEffect(() => {
     if (selectedMap && manifest.length > 0) {
       const filtered = manifest.filter(m => m.map_id === selectedMap);
       setFilteredMatches(filtered);
       
-      // Collapse all dates by default
       const allDates = [...new Set(filtered.map(m => m.date))];
       setCollapsedDates(allDates);
       
-      // Do not auto-select matches anymore; let user choose
-      setCheckedMatches([]);
-      setSelectedMatch(null);
-      setTrajectories([]);
-      setEvents([]);
+      if (!isFirstMapLoad.current) {
+        setCheckedMatches([]);
+        setSelectedMatch(null);
+        setTrajectories([]);
+        setEvents([]);
+      }
+      isFirstMapLoad.current = false;
     }
   }, [selectedMap, manifest]);
   
@@ -177,11 +269,11 @@ export default function App() {
   }, [selectedMap]);
   
   // Handles changing the active match
-  async function handleMatchChange(matchObj) {
+  async function handleMatchChange(matchObj, startTime = 0, hmType = heatmapType) {
     if (!matchObj) return;
     setIsPlaying(false);
     setSelectedMatch(matchObj);
-    setCurrentTime(0);
+    setCurrentTime(startTime);
     setMaxTime(matchObj.duration_ms);
     setDuckdbLoading(true);
     setLoadingStatus(`Initializing DuckDB-Wasm & Loading Match Parquet File...`);
@@ -201,7 +293,7 @@ export default function App() {
       setEvents(evts);
       
       // Load current heatmap data
-      await loadHeatmapData(heatmapType);
+      await loadHeatmapData(hmType, matchObj);
       
       setDuckdbLoading(false);
       setLoadingStatus("");
@@ -213,7 +305,7 @@ export default function App() {
   }
   
   // Handles changing to Macro View
-  async function handleMacroView(matches) {
+  async function handleMacroView(matches, startTime = 0, hmType = heatmapType) {
     if (!matches || matches.length === 0) return;
     setIsPlaying(false);
     
@@ -226,7 +318,7 @@ export default function App() {
     };
     
     setSelectedMatch(macroObj);
-    setCurrentTime(0);
+    setCurrentTime(startTime);
     setMaxTime(macroObj.duration_ms);
     setDuckdbLoading(true);
     setLoadingStatus(`Fetching aggregated data for ${matches.length} matches...`);
@@ -240,7 +332,7 @@ export default function App() {
       const evts = await getEvents();
       setEvents(evts);
       
-      await loadHeatmapData(heatmapType);
+      await loadHeatmapData(hmType, macroObj);
       
       setDuckdbLoading(false);
       setLoadingStatus("");
@@ -248,6 +340,19 @@ export default function App() {
       console.error(err);
       setErrorMsg(`Failed to load macro data for map ${selectedMap}.`);
       setDuckdbLoading(false);
+    }
+  }
+
+  // Clears the timeline preview and restores macro state or empty state
+  function clearTimelinePreview() {
+    if (checkedMatches.length > 1) {
+      handleMacroView(checkedMatches);
+    } else {
+      setSelectedMatch(null);
+      setTrajectories([]);
+      setEvents([]);
+      setCurrentTime(0);
+      setMaxTime(0);
     }
   }
 
@@ -326,9 +431,37 @@ export default function App() {
   }
   
   // Load Heatmap points from DuckDB based on toggle type
-  async function loadHeatmapData(type) {
-    if (!selectedMatch || type === 'none') {
+  async function loadHeatmapData(type, overrideMatch = null) {
+    if (type === 'none') {
       setHeatmapPoints([]);
+      return;
+    }
+
+    const match = overrideMatch || selectedMatch;
+    if (!match) {
+      setHeatmapPoints([]);
+      return;
+    }
+
+    // If the CURRENT match is the macro view, use all checked matches!
+    if (match.is_macro && checkedMatches.length > 1) {
+      try {
+        const fetchPromises = checkedMatches.map(m => {
+          const fileUrl = `${import.meta.env.BASE_URL}${m.file_path}`;
+          return fetch(fileUrl).then(res => res.ok ? res.json() : null).catch(() => null);
+        });
+        const results = await Promise.all(fetchPromises);
+        const points = [];
+        results.forEach(data => {
+          if (!data || !data.heatmaps) return;
+          if (type === 'traffic' && data.heatmaps.traffic) points.push(...data.heatmaps.traffic);
+          if (type === 'kills' && data.heatmaps.kills) points.push(...data.heatmaps.kills);
+          if (type === 'deaths' && data.heatmaps.deaths) points.push(...data.heatmaps.deaths);
+        });
+        setHeatmapPoints(points);
+      } catch (error) {
+        console.error("Error fetching macro heatmap:", error);
+      }
       return;
     }
     
@@ -846,7 +979,7 @@ export default function App() {
         selectedMap={selectedMap} setSelectedMap={setSelectedMap} maps={maps}
         filteredMatches={filteredMatches} checkedMatches={checkedMatches} collapsedDates={collapsedDates}
         toggleDateCollapse={toggleDateCollapse} toggleDateSelection={toggleDateSelection}
-        handleMatchCardClick={handleMatchCardClick} toggleMatchSelection={toggleMatchSelection} selectedMatch={selectedMatch} formatTime={formatTime}
+        handleMatchCardClick={handleMatchCardClick} toggleMatchSelection={toggleMatchSelection} handleMatchChange={handleMatchChange} clearTimelinePreview={clearTimelinePreview} selectedMatch={selectedMatch} formatTime={formatTime}
         showPaths={showPaths} setShowPaths={setShowPaths} showHumans={showHumans} setShowHumans={setShowHumans} showBots={showBots} setShowBots={setShowBots}
         showDeaths={showDeaths} setShowDeaths={setShowDeaths} showKills={showKills} setShowKills={setShowKills} showStorm={showStorm} setShowStorm={setShowStorm} showLoot={showLoot} setShowLoot={setShowLoot}
       />
@@ -860,7 +993,7 @@ export default function App() {
         hoveredEntity={hoveredEntity} tooltipPos={tooltipPos}
         selectedMatch={selectedMatch} formatTime={formatTime} currentTime={currentTime} maxTime={maxTime} setCurrentTime={setCurrentTime}
         setIsPlaying={setIsPlaying} isPlaying={isPlaying} playbackSpeed={playbackSpeed} setPlaybackSpeed={setPlaybackSpeed}
-        heatmapType={heatmapType} setHeatmapType={setHeatmapType}
+        heatmapType={heatmapType} setHeatmapType={setHeatmapType} clearTimelinePreview={clearTimelinePreview} generateShareUrl={generateShareUrl}
       />
       
       {/* 3. RIGHT SIDEBAR: LIVE LOBBY COUNTS & DYNAMIC EVENT FEED */}

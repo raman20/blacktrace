@@ -40,3 +40,4 @@ The formula applied is:
 | **HTML5 Canvas** | SVG / WebGL | SVG crashes with >50k nodes. WebGL is overkill for 2D. Canvas 2D is the perfect sweet spot for rapid development and high performance. |
 | **Tree-View Sidebar** | Paginated List / Dropdowns | A traditional list was too cluttered for 5 days of matches. The hierarchical Date-Group tree allows mass-selection for Macro Views instantly. |
 | **Client-Side Manifest** | Dynamic File System Scanning | Browsers can't read directories. Running a Python script to pre-generate a `manifest.json` allows the static frontend to "know" about all files natively. |
+| **On-Demand URL Sharing** | Live React Router / History API | Constantly replacing the URL bar state on every scrub/toggle bloated the browser history stack. I avoided live URL syncing and implemented a dedicated `generateShareUrl()` capture button that securely builds the state representation on demand and dumps it to the clipboard. |

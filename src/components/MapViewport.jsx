@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  ZoomIn, ZoomOut, LocateFixed, ShieldAlert, Pause, Play, RotateCcw 
+  ZoomIn, ZoomOut, LocateFixed, ShieldAlert, Pause, Play, RotateCcw, X, Share2
 } from 'lucide-react';
 
 export default function MapViewport({
@@ -11,7 +11,7 @@ export default function MapViewport({
   hoveredEntity, tooltipPos,
   selectedMatch, formatTime, currentTime, maxTime, setCurrentTime,
   setIsPlaying, isPlaying, playbackSpeed, setPlaybackSpeed,
-  heatmapType, setHeatmapType
+  heatmapType, setHeatmapType, clearTimelinePreview, generateShareUrl
 }) {
   return (
     <main className="viewport">
@@ -37,6 +37,7 @@ export default function MapViewport({
         <button className="hud-btn" title="Zoom In" onClick={handleZoomIn}><ZoomIn size={18}/></button>
         <button className="hud-btn" title="Zoom Out" onClick={handleZoomOut}><ZoomOut size={18}/></button>
         <button className="hud-btn" title="Reset View" onClick={resetZoomPan}><LocateFixed size={16}/></button>
+        <button className="hud-btn" title="Share View" onClick={generateShareUrl} style={{ marginTop: '10px', color: 'var(--accent-cyan)' }}><Share2 size={16}/></button>
       </div>
       
       <div className="canvas-wrapper" ref={containerRef} onWheel={handleWheel}>
@@ -137,6 +138,15 @@ export default function MapViewport({
               disabled={duckdbLoading || !selectedMatch}
             >
               <RotateCcw size={14}/> Restart
+            </button>
+            
+            <button 
+              className="icon-btn"
+              onClick={clearTimelinePreview}
+              title="Close Timeline"
+              style={{ color: '#ff4d6d' }}
+            >
+              <X size={14} /> Close
             </button>
             
             {/* Playback speed multiplier selection */}
