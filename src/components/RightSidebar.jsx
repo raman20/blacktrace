@@ -18,7 +18,7 @@ export default function RightSidebar({
             >
               <PanelRightClose size={18} />
             </button>
-            <h2 style={{ fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-secondary)', margin: 0 }}>Lobby Stats</h2>
+            <h2 style={{ fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-secondary)', margin: 0 }}>Playback Stats</h2>
           </div>
           <div style={{ height: '10px' }}></div>
           <div className="stats-grid">
@@ -82,7 +82,7 @@ export default function RightSidebar({
         >
           <PanelRightOpen size={18} />
         </button>
-        <div className="collapsed-strip-vertical-text">Stats & Event Log</div>
+        <div className="collapsed-strip-vertical-text">Playback Stats & Log</div>
       </div>
     </aside>
   );

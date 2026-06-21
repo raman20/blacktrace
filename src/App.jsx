@@ -40,7 +40,7 @@ function formatTime(ms) {
 export default function App() {
   // Sidebar toggle states
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(true);
-  const [rightSidebarOpen, setRightSidebarOpen] = useState(true);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
 
   // Master manifest and filters
   const [manifest, setManifest] = useState([]);
@@ -246,6 +246,15 @@ export default function App() {
       killFeedRef.current.scrollTop = killFeedRef.current.scrollHeight;
     }
   }, [currentTime]);
+
+  // Auto-expand right sidebar only when timeline mode is active
+  useEffect(() => {
+    if (selectedMatch && !selectedMatch.is_macro) {
+      setRightSidebarOpen(true);
+    } else {
+      setRightSidebarOpen(false);
+    }
+  }, [selectedMatch]);
   
   // Pre-load map image whenever selected map changes
   useEffect(() => {
