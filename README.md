@@ -1,5 +1,6 @@
 # Black Trace: Player Journey Visualization
 
+🚀 **Live Deployment:** [https://raman20.github.io/blacktrace/](https://raman20.github.io/blacktrace/)
 **Black Trace** is a game telemetry visualization tool designed exclusively for Level Designers. It renders massive sets of player trajectories, combat events, and traffic heatmaps directly in the browser at 60 FPS using the HTML5 Canvas API and a static read-optimized JSON pipeline.
 
 ## 🌟 Key Features
